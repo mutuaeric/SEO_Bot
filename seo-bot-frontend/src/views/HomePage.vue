@@ -19,6 +19,8 @@
   
   h2 {
     margin-bottom: 20px;
+    display: block;
+    text-align: center;
   }
   </style>
   

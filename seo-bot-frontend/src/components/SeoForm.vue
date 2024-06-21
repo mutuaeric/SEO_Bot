@@ -6,10 +6,28 @@
       <input id="urlInput" v-model="url" placeholder="https://example.com" />
     </div>
     
-    <button class="btn-submit" @click="checkBrokenLinks">Check Broken Links</button>
+    <div class="form-group">
+      <button class="btn-submit" @click="checkBrokenLinks" :disabled="loadingCheck">
+        <span v-if="loadingCheck">
+          <i class="fas fa-circle-notch fa-spin"></i> Loading...
+        </span>
+        <span v-else>
+          Check Broken Links
+        </span>
+      </button>
+    </div>
     
-    <input type="file" @change="handleFileUpload" />
-    <button class="btn-submit" @click="analyzeSpreadsheet">Analyze Spreadsheet</button>
+    <div class="form-group">
+      <input type="file" @change="handleFileUpload" />
+      <button class="btn-submit" @click="analyzeSpreadsheet" :disabled="loadingAnalyze">
+        <span v-if="loadingAnalyze">
+          <i class="fas fa-circle-notch fa-spin"></i> Loading...
+        </span>
+        <span v-else>
+          Analyze Spreadsheet
+        </span>
+      </button>
+    </div>
 
     <div v-if="results">
       <h3>Results</h3>
@@ -26,24 +44,39 @@ export default {
     return {
       url: '',
       file: null,
-      results: null
+      results: null,
+      error: null,
+      loadingCheck: false,
+      loadingAnalyze: false
     };
   },
   methods: {
     checkBrokenLinks() {
+      this.loadingCheck = true;  // Set loading state for checkBrokenLinks
+
+      let encodedUrl = encodeURIComponent(this.url);
       axios
-        .get(`http://localhost:8000/api/seo/check-broken-links/?url=${this.url}`)
+        .get(`http://localhost:8000/api/seo/check-broken-links/?url=${encodedUrl}`)
         .then(response => {
+          console.log('Response:', response.data);
           this.results = response.data;
+          this.error = null;
         })
         .catch(error => {
           console.error('Error checking broken links:', error);
+          this.error = 'Failed to check broken links';
+          this.results = null;
+        })
+        .finally(() => {
+          this.loadingCheck = false;  // Reset loading state for checkBrokenLinks
         });
     },
     handleFileUpload(event) {
       this.file = event.target.files[0];
     },
     analyzeSpreadsheet() {
+      this.loadingAnalyze = true;  // Set loading state for analyzeSpreadsheet
+
       let formData = new FormData();
       formData.append('file', this.file);
 
@@ -54,10 +87,17 @@ export default {
           }
         })
         .then(response => {
+          console.log('Response:', response.data);
           this.results = response.data;
+          this.error = null;
         })
         .catch(error => {
           console.error('Error analyzing spreadsheet:', error);
+          this.error = 'Failed to analyze spreadsheet';
+          this.results = null;
+        })
+        .finally(() => {
+          this.loadingAnalyze = false;  // Reset loading state for analyzeSpreadsheet
         });
     }
   }
@@ -70,10 +110,12 @@ export default {
   padding: 20px;
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 label {
@@ -82,11 +124,11 @@ label {
 }
 
 input {
-  width: 100%;
+  width: 80%;
   padding: 10px;
   font-size: 14px;
   border: 1px solid #ccc;
-  border-radius: 3px;
+  border-radius: 5px;
 }
 
 .btn-submit {
@@ -98,9 +140,32 @@ input {
   border-radius: 3px;
   transition: background-color 0.3s ease;
   margin-right: 10px;
+  margin-top: 5px;
+  position: relative;
+}
+
+.btn-submit span {
+  display: inline-block;
+}
+
+.btn-submit i {
+  margin-right: 5px;
 }
 
 .btn-submit:hover {
   background-color: #85c961;
+}
+
+.fa-spin {
+  animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
