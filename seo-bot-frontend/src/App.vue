@@ -26,8 +26,8 @@ export default {
 };
 </script>
 
-<style>
-/* Global styles can be defined here */
+<style scoped>
+/* Scoped styles specific to App.vue */
 body {
   font-family: Arial, sans-serif;
   margin: 0;
