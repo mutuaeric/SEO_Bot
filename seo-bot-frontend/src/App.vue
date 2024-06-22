@@ -1,9 +1,9 @@
 <template>
   <div id="app">
     <header>
-      <h1>SEO Bot App</h1>
+      <h1>SEO Bot</h1>
       <nav>
-        <!-- Navigation links if needed -->
+       
       </nav>
     </header>
     
@@ -21,13 +21,13 @@
 export default {
   name: 'App',
   components: {
-    // Include any global components here if needed
+    
   }
 };
 </script>
 
 <style scoped>
-/* Scoped styles specific to App.vue */
+
 body {
   font-family: Arial, sans-serif;
   margin: 0;
