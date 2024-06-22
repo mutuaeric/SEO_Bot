@@ -1,9 +1,13 @@
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+from django.http import JsonResponse
+from .analyze_data import categorize_scraped_data
+
 
 class CheckBrokenLinks(APIView):
     def get(self, request):
@@ -38,6 +42,21 @@ class CheckBrokenLinks(APIView):
             # Log the exception for debugging purposes
             print(f"Unexpected error occurred: {str(e)}")
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+def analyze_spreadsheet(request):
+    file = request.FILES.get('file')
+    if not file:
+        return Response({'error': 'File is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        df = pd.read_excel(file) if file.name.endswith('.xlsx') else pd.read_csv(file)
+        links = df['URL'].tolist()  # Assuming 'URL' is the column containing links
+        return Response({'links': links})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class AnalyzeSpreadsheet(APIView):
     def post(self, request):

@@ -17,21 +17,74 @@
       </button>
     </div>
     
+    <!-- Upload Excel File -->
     <div class="form-group">
-      <input type="file" @change="handleFileUpload" />
+      <label for="fileInput">Upload Spreadsheet (Excel or CSV):</label>
+      <input type="file" id="fileInput" @change="handleFileUpload" />
       <button class="btn-submit" @click="analyzeSpreadsheet" :disabled="loadingAnalyze">
         <span v-if="loadingAnalyze">
-          <i class="fas fa-circle-notch fa-spin"></i> Loading...
+          <i class="fas fa-circle-notch fa-spin"></i> Analyzing...
         </span>
         <span v-else>
-          Analyze Spreadsheet
+          Extract Links from Spreadsheet
         </span>
       </button>
     </div>
 
-    <div v-if="results">
+    <!-- Extracted Links Section -->
+    <div v-if="extractedLinks.length > 0">
+      <h3>Extracted Links</h3>
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>URL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(link, index) in extractedLinks" :key="index">
+            <td>{{ link }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Button to Check Broken Links for All Extracted Links -->
+      <button class="btn-submit" @click="checkAllBrokenLinks" :disabled="loadingCheckAll">
+        <span v-if="loadingCheckAll">
+          <i class="fas fa-circle-notch fa-spin"></i> Checking Broken Links...
+        </span>
+        <span v-else>
+          Check Broken Links for All Extracted Links
+        </span>
+      </button>
+    </div>
+
+     <!-- Results Section -->
+     <div v-if="results">
       <h3>Results</h3>
-      <pre>{{ results }}</pre>
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(value, key) in results" :key="key">
+            <td>{{ key }}</td>
+            <td>
+              <ul v-if="Array.isArray(value)">
+                <li v-for="(item, index) in value" :key="index">{{ item }}</li>
+              </ul>
+              <span v-else>{{ value }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Error Handling -->
+    <div v-if="error" class="error-message">
+      {{ error }}
     </div>
   </div>
 </template>
@@ -44,15 +97,21 @@ export default {
     return {
       url: '',
       file: null,
+      extractedLinks: [],
       results: null,
       error: null,
+      loadingAnalyze: false,
       loadingCheck: false,
-      loadingAnalyze: false
+      loadingCheckAll: false
     };
   },
   methods: {
     checkBrokenLinks() {
-      this.loadingCheck = true;  // Set loading state for checkBrokenLinks
+      if (!this.url) {
+        this.error = 'Please enter a valid URL';
+        return;
+      }
+      this.loadingCheck = true;
 
       let encodedUrl = encodeURIComponent(this.url);
       axios
@@ -68,14 +127,19 @@ export default {
           this.results = null;
         })
         .finally(() => {
-          this.loadingCheck = false;  // Reset loading state for checkBrokenLinks
+          this.loadingCheck = false;
         });
     },
     handleFileUpload(event) {
       this.file = event.target.files[0];
+      console.log('Uploaded file:', this.file);
     },
     analyzeSpreadsheet() {
-      this.loadingAnalyze = true;  // Set loading state for analyzeSpreadsheet
+      if (!this.file) {
+        this.error = 'Please upload a spreadsheet file';
+        return;
+      }
+      this.loadingAnalyze = true;
 
       let formData = new FormData();
       formData.append('file', this.file);
@@ -87,17 +151,48 @@ export default {
           }
         })
         .then(response => {
-          console.log('Response:', response.data);
-          this.results = response.data;
-          this.error = null;
-        })
+      console.log('Extracted Links:', response.data);
+      if (response.data.links) {
+        this.extractedLinks = response.data.links;
+        this.error = null;
+      } else {
+        this.error = 'No links found in the spreadsheet';
+        this.extractedLinks = [];
+      }
+    })
         .catch(error => {
-          console.error('Error analyzing spreadsheet:', error);
-          this.error = 'Failed to analyze spreadsheet';
-          this.results = null;
+          console.error('Error extracting links from spreadsheet:', error);
+          this.error = 'Failed to extract links from spreadsheet';
+          this.extractedLinks = [];
         })
         .finally(() => {
-          this.loadingAnalyze = false;  // Reset loading state for analyzeSpreadsheet
+          this.loadingAnalyze = false;
+        });
+    },
+    checkAllBrokenLinks() {
+      
+      if (this.extractedLinks.length === 0) {
+        this.error = 'No links to check';
+        return;
+      }
+
+      this.loadingCheckAll = true;
+
+      // Assume you have an API endpoint to check all broken links in one go
+      axios
+        .post(`http://localhost:8000/api/seo/check-all-broken-links/`, {
+          links: this.extractedLinks
+        })
+        .then(response => {
+          console.log('Broken Links Results:', response.data);
+          // Handle the response as needed
+        })
+        .catch(error => {
+          console.error('Error checking all broken links:', error);
+          // Handle the error
+        })
+        .finally(() => {
+          this.loadingCheckAll = false;
         });
     }
   }
@@ -124,7 +219,7 @@ label {
 }
 
 input {
-  width: 80%;
+  width: 90%;
   padding: 10px;
   font-size: 14px;
   border: 1px solid #ccc;
@@ -167,5 +262,28 @@ input {
   to {
     transform: rotate(360deg);
   }
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.results-table th,
+.results-table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+.results-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.error-message {
+  color: #ff6347;
+  margin-top: 10px;
 }
 </style>

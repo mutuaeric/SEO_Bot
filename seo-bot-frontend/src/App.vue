@@ -11,9 +11,9 @@
       <router-view />
     </main>
     
-    <footer>
+    <!-- <footer>
       <p>&copy; 2024 Your Company</p>
-    </footer>
+    </footer> -->
   </div>
 </template>
 
@@ -48,13 +48,13 @@ main {
   margin: 20px;
 }
 
-footer {
-  background-color: #333;
+/* footer {
+  background-color: #44444480;
   color: #fff;
   text-align: center;
   padding: 10px;
   position: fixed;
   bottom: 0;
   width: 100%;
-}
+} */
 </style>
