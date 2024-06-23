@@ -32,8 +32,5 @@ def categorize_scraped_data(data):
         else:
             categories['Other Links'].append(item)
             
-        # Extract keywords from each item (assuming words after last '/' or ':')
-        keywords = re.findall(r'[\w-]+(?=[\/:])', item)
-        categories['Keywords'].extend(keywords)
     
     return categories

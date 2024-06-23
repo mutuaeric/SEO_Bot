@@ -1,4 +1,4 @@
-<template>
+ <template>
   <div class="seo-form">
     <h2>SEO Form</h2>
     <div class="form-group">
@@ -16,41 +16,9 @@
         </span>
       </button>
     </div>
-    
-    <!-- Upload Excel File -->
-   <!--  <div class="form-group">
-      <label for="fileInput">Upload Spreadsheet (Excel or CSV):</label>
-      <input type="file" id="fileInput" @change="handleFileUpload" />
-      <button class="btn-submit" @click="analyzeSpreadsheet" :disabled="loadingAnalyze">
-        <span v-if="loadingAnalyze">
-          <i class="fas fa-circle-notch fa-spin"></i> Analyzing...
-        </span>
-        <span v-else>
-          Extract Links from Spreadsheet
-        </span>
-      </button>
-    </div> 
-
-    !-- Extracted Links Section --
-
-    <div v-if="error" class="error">{{ error }}</div>
-    <table v-if="extractedLinks.length > 0">
-      <thead>
-        <tr>
-          <th>Link</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(link, index) in extractedLinks" :key="index">
-          <td>{{ link }}</td>
-        </tr>
-      </tbody>
-    </table> 
-
-    <div v-if="loadingAnalyze">Analyzing spreadsheet...</div> -->
-  </div> 
-     <!-- Results Section -->
-     <div v-if="results">
+  
+    <!-- Results Section -->
+    <div v-if="results">
       <h3>Results</h3>
       <table class="results-table">
         <thead>
@@ -77,7 +45,7 @@
     <div v-if="error" class="error-message">
       {{ error }}
     </div>
-
+  </div>
 </template>
 
 <script>
@@ -87,13 +55,9 @@ export default {
   data() {
     return {
       url: '',
-      file: null,
-      extractedLinks: [],
       results: null,
       error: null,
-      loadingAnalyze: false,
-      loadingCheck: false,
-      loadingCheckAll: false
+      loadingCheck: false
     };
   },
   methods: {
@@ -109,7 +73,7 @@ export default {
         .get(`http://localhost:8000/api/seo/check-broken-links/?url=${encodedUrl}`)
         .then(response => {
           console.log('Response:', response.data);
-          this.results = response.data;
+          this.results = this.filterLinks(response.data);
           this.error = null;
         })
         .catch(error => {
@@ -121,70 +85,22 @@ export default {
           this.loadingCheck = false;
         });
     },
-   /*  handleFileUpload(event) {
-      this.file = event.target.files[0];
-      console.log('Uploaded file:', this.file);
-    },
-    
-    analyzeSpreadsheet() {
-      if (!this.file) {
-        this.error = 'Please upload a spreadsheet file';
-        return;
-      }
-
-      this.loadingAnalyze = true;
-      let formData = new FormData();
-      formData.append('file', this.file);
-
-      axios
-        .post(`http://localhost:8000/api/seo/analyze-spreadsheet/`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        })
-        .then(response => {
-          console.log('Response from analyze spreadsheet:', response.data);
-          this.extractedLinks = response.data.links || [];
-          this.error = this.extractedLinks.length > 0 ? null : 'No links found in the spreadsheet';
-        })
-        .catch(error => {
-          console.error('Error extracting links from spreadsheet:', error);
-          this.error = 'Failed to extract links from spreadsheet';
-          this.extractedLinks = [];
-        })
-        .finally(() => {
-          this.loadingAnalyze = false;
-        });
-    },
-
-    checkAllBrokenLinks() {
+    filterLinks(data) {
+      const unwantedLinks = ['#', 'javascript:void(0)', '/#'];
+      const filteredData = {};
       
-      if (this.extractedLinks.length === 0) {
-        this.error = 'No links to check';
-        return;
-      }
+      Object.keys(data).forEach(key => {
+        if (Array.isArray(data[key])) {
+          filteredData[key] = data[key].filter(link => !unwantedLinks.includes(link));
+        } else {
+          filteredData[key] = data[key];
+        }
+      });
 
-      this.loadingCheckAll = true;
-
-      // Assume you have an API endpoint to check all broken links in one go
-      axios
-        .post(`http://localhost:8000/api/seo/check-all-broken-links/`, {
-          links: this.extractedLinks
-        })
-        .then(response => {
-          console.log('Broken Links Results:', response.data);
-          // Handle the response as needed
-        })
-        .catch(error => {
-          console.error('Error checking all broken links:', error);
-          // Handle the error
-        })
-        .finally(() => {
-          this.loadingCheckAll = false;
-        });
-    }*/
+      return filteredData;
+    }
   }
-}; 
+};
 </script>
 
 <style scoped>
