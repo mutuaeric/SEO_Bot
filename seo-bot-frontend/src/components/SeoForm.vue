@@ -18,7 +18,7 @@
     </div>
     
     <!-- Upload Excel File -->
-    <div class="form-group">
+   <!--  <div class="form-group">
       <label for="fileInput">Upload Spreadsheet (Excel or CSV):</label>
       <input type="file" id="fileInput" @change="handleFileUpload" />
       <button class="btn-submit" @click="analyzeSpreadsheet" :disabled="loadingAnalyze">
@@ -29,35 +29,26 @@
           Extract Links from Spreadsheet
         </span>
       </button>
-    </div>
+    </div> 
 
-    <!-- Extracted Links Section -->
-    <div v-if="extractedLinks.length > 0">
-      <h3>Extracted Links</h3>
-      <table class="results-table">
-        <thead>
-          <tr>
-            <th>URL</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(link, index) in extractedLinks" :key="index">
-            <td>{{ link }}</td>
-          </tr>
-        </tbody>
-      </table>
+    !-- Extracted Links Section --
 
-      <!-- Button to Check Broken Links for All Extracted Links -->
-      <button class="btn-submit" @click="checkAllBrokenLinks" :disabled="loadingCheckAll">
-        <span v-if="loadingCheckAll">
-          <i class="fas fa-circle-notch fa-spin"></i> Checking Broken Links...
-        </span>
-        <span v-else>
-          Check Broken Links for All Extracted Links
-        </span>
-      </button>
-    </div>
+    <div v-if="error" class="error">{{ error }}</div>
+    <table v-if="extractedLinks.length > 0">
+      <thead>
+        <tr>
+          <th>Link</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(link, index) in extractedLinks" :key="index">
+          <td>{{ link }}</td>
+        </tr>
+      </tbody>
+    </table> 
 
+    <div v-if="loadingAnalyze">Analyzing spreadsheet...</div> -->
+  </div> 
      <!-- Results Section -->
      <div v-if="results">
       <h3>Results</h3>
@@ -86,7 +77,7 @@
     <div v-if="error" class="error-message">
       {{ error }}
     </div>
-  </div>
+
 </template>
 
 <script>
@@ -130,17 +121,18 @@ export default {
           this.loadingCheck = false;
         });
     },
-    handleFileUpload(event) {
+   /*  handleFileUpload(event) {
       this.file = event.target.files[0];
       console.log('Uploaded file:', this.file);
     },
+    
     analyzeSpreadsheet() {
       if (!this.file) {
         this.error = 'Please upload a spreadsheet file';
         return;
       }
-      this.loadingAnalyze = true;
 
+      this.loadingAnalyze = true;
       let formData = new FormData();
       formData.append('file', this.file);
 
@@ -151,15 +143,10 @@ export default {
           }
         })
         .then(response => {
-      console.log('Extracted Links:', response.data);
-      if (response.data.links) {
-        this.extractedLinks = response.data.links;
-        this.error = null;
-      } else {
-        this.error = 'No links found in the spreadsheet';
-        this.extractedLinks = [];
-      }
-    })
+          console.log('Response from analyze spreadsheet:', response.data);
+          this.extractedLinks = response.data.links || [];
+          this.error = this.extractedLinks.length > 0 ? null : 'No links found in the spreadsheet';
+        })
         .catch(error => {
           console.error('Error extracting links from spreadsheet:', error);
           this.error = 'Failed to extract links from spreadsheet';
@@ -169,6 +156,7 @@ export default {
           this.loadingAnalyze = false;
         });
     },
+
     checkAllBrokenLinks() {
       
       if (this.extractedLinks.length === 0) {
@@ -194,9 +182,9 @@ export default {
         .finally(() => {
           this.loadingCheckAll = false;
         });
-    }
+    }*/
   }
-};
+}; 
 </script>
 
 <style scoped>
